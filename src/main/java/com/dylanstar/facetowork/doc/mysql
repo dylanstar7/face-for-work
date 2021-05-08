@@ -1,0 +1,32 @@
+1.  服务器逻辑架构：
+    客户端->连接/线程处理->查询缓存/->解析器->优化器->存储引擎
+2.  mysql5.5及以上支持线程池，使用池中少量的线程来服务大量的连接
+3.  共享锁（shared lock）/排他锁(exclusive lock)又称读锁和写锁
+4.  mysql不同存储引擎有不同的锁机制：MyISAM和MEMORY存储引擎采用的是表级锁（table-level locking）；BDB存储引擎采用的是页面锁（page-level locking），但也支持表级锁；InnoDB存储引擎既支持行级锁（row-level locking），也支持表级锁，但默认情况下是采用行级锁。
+    在InnoDB下 ，使用表锁要注意以下两点。
+
+    （１）使用LOCK TALBES虽然可以给InnoDB加表级锁，但必须说明的是，表锁不是由InnoDB存储引擎层管理的，而是由其上一层ＭySQL Server负责的，仅当autocommit=0（当前session禁用自动提交事物，每个SQL语句或者语句块所在的事务都需要显示"commit"才能提交事务。）、innodb_table_lock=1（默认设置）时，InnoDB层才能知道MySQL加的表锁，ＭySQL Server才能感知InnoDB加的行锁，这种情况下，InnoDB才能自动识别涉及表级锁的死锁；否则，InnoDB将无法自动检测并处理这种死锁。
+
+    （２）在用LOCAK TABLES对InnoDB锁时要注意，要将AUTOCOMMIT设为0，否则ＭySQL不会给表加锁；事务结束前，不要用UNLOCAK TABLES释放表锁，因为UNLOCK TABLES会隐含地提交事务；COMMIT或ROLLBACK产不能释放用LOCAK TABLES加的表级锁，必须用UNLOCK TABLES释放表锁，正确的方式见如下语句。
+
+      SET AUTOCOMMIT=0;
+
+      LOCAK TABLES t1 READ, t2 WRITE, ...;
+
+      [do something with tables t1 and here];
+
+      COMMIT;
+
+      UNLOCK TABLES;
+5.
+
+
+
+2021.02.08
+1.ip协议无连接的通信协议，不可靠，无法确认顺序发送或者包是否被破坏
+2.tcp协议：面向连接的，可靠的，基于字节流的传输层通信协议。
+3.ip地址+协议+端口号=套接字 socket
+4.tcp flags: URG:紧急指针标志 为1有效， ACK:确认序号标志  psh:push标志，尽快交给应用层； RST：重置链接标志  SYN：同步序号，建立连接过程；FIN:释放连接
+5.为什么需要三次握手才能建立连接？ 为了初始化seq number,两边缓存seq number
+6.首次握手的隐患：起因分析：server端收到client的syn，回复syn-ack的时候未收到ack确认，Server端不断重试 5次 1s, 2s, 4s, 8s, 16s,第五次发出去后等待32s才判定为超时
+7.针对syn-flood的防护措施：syn队列满后，通过tcp_syncookies参数回发syn cookie;若为正常链接，则会回发syn cookie，重新建立连接。由src des+时间戳做一个cookie

@@ -1,4 +1,4 @@
-package com.dylanstar.facetowork.article;
+package com.dylanstar.facetowork;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
